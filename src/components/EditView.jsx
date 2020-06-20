@@ -1,46 +1,49 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import TextField from "@material-ui/core/TextField";
 import SelectDropdown from "./SelectDropdown";
 import MultiSelectDropdown from "./MultiSelectDropdown";
 import Button from "@material-ui/core/Button";
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { setPersonalData } from "../redux/dataAction";
-import { withStyles } from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core/styles";
 
-const styles = (theme) => ({
+const useStyles = makeStyles({
   root: {
     backgroundColor: "#9ACD32",
-    margin: "0.5rem"
+    margin: "0.5rem",
   },
 });
-class EditView extends Component {
-  constructor(props) {
-    super(props);
-    let ind = window.location.href.split("/").pop();
-    this.state = {
-      personalDetails:props.personalData.length > 0 ?props.personalData:[],
-      name: props.personalData.length > 0 ? props.personalData[ind].name : "",
-      gender:
-        props.personalData.length > 0 ? props.personalData[ind].gender : "",
-      interests:
-        props.personalData.length > 0 ? props.personalData[ind].interests : [],
-    };
-  }
-  componentWillReceiveProps(nextProps) {
-    let ind = this.location.href.split("/").pop();
-    this.setState({
-      name: nextProps.personalData[ind].name,
-      gender: nextProps.personalData[ind].gender,
-      interests: nextProps.personalData[ind].interests,
-    });
-  }
-  setGenderInForm = (gender) => {
-    this.setState({
-      gender: gender,
-    });
+function EditView(props) {
+  const classes = useStyles();
+  const dispatch = useDispatch();
+  let ind = window.location.href.split("/").pop();
+
+  const [personalDetails, setPersonalDetails] = useState(
+    props.personalData.length > 0 ? props.personalData : []
+  );
+  const [name, setName] = useState(
+    props.personalData.length > 0 ? props.personalData[ind].name : ""
+  );
+  const [gender, setGender] = useState(
+    props.personalData.length > 0 ? props.personalData[ind].gender : ""
+  );
+  const [interests, setInterests] = useState(
+    props.personalData.length > 0 ? props.personalData[ind].interests : []
+  );
+
+  useEffect(() => {
+    setName(props.personalData.length > 0 ? props.personalData[ind].name : "");
+    setGender(
+      props.personalData.length > 0 ? props.personalData[ind].gender : ""
+    );
+    setInterests(
+      props.personalData.length > 0 ? props.personalData[ind].interests : []
+    );
+  }, [props.personalData]);
+  const setGenderInForm = (gender) => {
+    setGender(gender);
   };
-  saveForm=()=>{
-    const { name, interests, gender, personalDetails } = this.state;
+  const saveForm = () => {
     let data = {
       name: name,
       interests: interests,
@@ -48,78 +51,62 @@ class EditView extends Component {
     };
     let personalData = personalDetails;
     let ind = window.location.href.split("/").pop();
-    personalData[ind]=data;
-    
-    this.setState({
-      personalDetails: personalData,
-      name: "",
-      gender: "",
-      interests: [],
-    });
-    this.props.setPersonalData(personalData);
-    this.props.history.push("/")
-  }
-  setInterestsInForm = (interests) => {
-    this.setState({
-      interests: interests,
-    });
-  };
-  handleInputChange = ({ target: { name, value } }) => {
-    this.setState({
-      [name]: value,
-    });
-  };
-  render() {
-    const { classes } = this.props;
-    const { name, gender, interests } = this.state;
-    return (
-      <div className="edit--container">
-        <div>
-          <h1>Edit View</h1>
-        </div>
-        <TextField
-          id="name"
-          label="Name"
-          name="name"
-          value={name}
-          onChange={this.handleInputChange}
-        />
-        <SelectDropdown
-          setGenderInForm={this.setGenderInForm}
-          isEditView={true}
-          genderProp={gender}
+    personalData[ind] = data;
 
-        />
-        <MultiSelectDropdown
-          setInterestsInForm={this.setInterestsInForm}
-          isEditView={true}
-          interestsProp={interests}
-        />
-        <div className="form--actions">
-        <Button
-          variant="contained"
-          className={classes.root}
-          onClick={this.saveForm}
-        >
+    setPersonalDetails(personalData);
+    setName("");
+    setGender("");
+    setInterests([]);
+    dispatch(setPersonalData(personalData));
+    props.history.push("/");
+  };
+  const setInterestsInForm = (interests) => {
+    setInterests(interests);
+  };
+  const handleInputChange = ({ target: { value } }) => {
+    setName(value);
+  };
+
+  return (
+    <div className="edit--container">
+      <div>
+        <h1>Edit View</h1>
+      </div>
+      <TextField
+        id="name"
+        label="Name"
+        name="name"
+        value={name}
+        onChange={handleInputChange}
+      />
+      <SelectDropdown
+        setGenderInForm={setGenderInForm}
+        isEditView={true}
+        genderProp={gender}
+      />
+      <MultiSelectDropdown
+        setInterestsInForm={setInterestsInForm}
+        isEditView={true}
+        interestsProp={interests}
+      />
+      <div className="form--actions">
+        <Button variant="contained" className={classes.root} onClick={saveForm}>
           Save
         </Button>
         <Button
           variant="outlined"
           color="primary"
           onClick={() => {
-            this.props.history.push("/");
+            props.history.push("/");
           }}
         >
           Cancel
         </Button>
-        </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 const mapStateToProps = (state) => ({
   personalData: state.data.personalDetails,
 });
-export default connect(mapStateToProps, { setPersonalData })(
-  withStyles(styles)(EditView)
-);
+export default connect(mapStateToProps, { setPersonalData })(EditView);

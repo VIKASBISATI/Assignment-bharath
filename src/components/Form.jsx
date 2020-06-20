@@ -1,60 +1,48 @@
-import React, { Component } from "react";
+import React, { useState,useEffect } from "react";
 import TextField from "@material-ui/core/TextField";
 import SelectDropdown from "./SelectDropdown";
 import MultiSelectDropdown from "./MultiSelectDropdown";
 import Button from "@material-ui/core/Button";
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { setPersonalData } from "../redux/dataAction";
 import ListItems from "./ListItems";
-import { withStyles } from "@material-ui/core/styles";
+import ListItemsTable from "./ListItemsTable";
+import { makeStyles } from "@material-ui/core/styles";
 
-
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: "#9ACD32",
-    margin: "0.5rem"
+    margin: "0.5rem",
   },
-});
+}));
 
-class Form extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      name: "",
-      clearItems: false,
-      gender: "",
-      interests: [],
-      personalDetails: props.personalData,
-    };
-  }
-  handleInputChange = ({ target: { name, value } }) => {
-    this.setState({
-      [name]: value,
-    });
+function Form(props) {
+  const classes = useStyles();
+  const dispatch = useDispatch();
+  const [name, setName] = useState("");
+  const [clearItems, setClearItems] = useState(false);
+  const [gender, setGender] = useState("");
+  const [interests, setInterests] = useState([]);
+  const [personalDetails, setPersonalDetails] = useState(props.personalData);
+
+  const handleInputChange = ({ target: { value } }) => {
+    setName(value);
   };
-  clearFields = () => {
-    this.setState({
-      name: "",
-      clearItems: true,
-      gender: "",
-      interests: [],
-      // personalDetails: [],
-    });
+  const clearFields = () => {
+    setName("");
+    setClearItems(true);
+    setGender("");
+    setInterests([]);
   };
-  componentDidUpdate() {
-    if (this.state.clearItems) {
-      this.setState({
-        clearItems: false,
-      });
+  useEffect(() => {
+    if (clearItems) {
+      setClearItems(false);
     }
-  }
-  setGenderInForm = (gender) => {
-    this.setState({
-      gender: gender,
-    });
+  });
+  const setGenderInForm = (gender) => {
+    setGender(gender);
   };
-  submitForm = () => {
-    const { name, interests, gender, personalDetails } = this.state;
+  const submitForm = () => {
     let data = {
       name: name,
       interests: interests,
@@ -62,73 +50,69 @@ class Form extends Component {
     };
     let personalData = personalDetails;
     personalData.push(data);
-    this.setState({
-      personalDetails: personalData,
-      name: "",
-      gender: "",
-      interests: [],
-      clearItems: true,
-    });
-    this.props.setPersonalData(personalData);
-    console.table("data", personalDetails[0]);
+    setPersonalDetails(personalData);
+    setName("");
+    setClearItems(true);
+    setGender("");
+    setInterests([]);
+    dispatch(setPersonalData(personalData));
   };
-  setInterestsInForm = (interests) => {
-    this.setState({
-      interests: interests,
-    });
+  const setInterestsInForm = (interests) => {
+    setInterests(interests);
   };
-  deleteListItem = (index) => {
-    let personalData = this.state.personalDetails;
+  const deleteListItem = (index) => {
+    let personalData = personalDetails;
     personalData.splice(index, 1);
-    this.setState({
-      personalDetails: personalData,
-    });
-    this.props.setPersonalData(personalData);
+    setPersonalDetails(personalData);
+    dispatch(setPersonalData(personalData));
   };
-  render() {
-    const { name, clearItems, personalDetails } = this.state;
-    const { personalData } = this.props;
-    const { classes } = this.props;
-    return (
-      <div className="form--container">
-        <div>
+
+  const { personalData } = props;
+  return (
+    <div className="form--container">
+      <div>
         <TextField
           id="name"
           label="Name"
           name="name"
           value={name}
-          onChange={this.handleInputChange}
+          onChange={handleInputChange}
         />
         <SelectDropdown
-          setGenderInForm={this.setGenderInForm}
+          setGenderInForm={setGenderInForm}
           clearSelectedItems={clearItems}
         />
         <MultiSelectDropdown
-          setInterestsInForm={this.setInterestsInForm}
+          setInterestsInForm={setInterestsInForm}
           clearSelectedItems={clearItems}
         />
         <div className="form--actions">
-        <Button variant="contained" className={classes.root} onClick={this.submitForm}>
-          Submit
-        </Button>
-        <Button variant="outlined" color="primary" onClick={this.clearFields}>
-          Cancel
-        </Button>
+          <Button
+            variant="contained"
+            className={classes.root}
+            onClick={submitForm}
+          >
+            Submit
+          </Button>
+          <Button variant="outlined" color="primary" onClick={clearFields}>
+            Cancel
+          </Button>
         </div>
-        </div>
-        <ListItems
-          editListItem={this.editListItem}
-          deleteListItem={this.deleteListItem}
-          listItems={personalDetails}
-        />
       </div>
-    );
-  }
+      {/* <ListItems
+        // editListItem={editListItem}
+        deleteListItem={deleteListItem}
+        listItems={personalDetails}
+      /> */}
+      <ListItemsTable
+        // editListItem={editListItem}
+        deleteListItem={deleteListItem}
+        listItems={personalDetails}
+      />
+    </div>
+  );
 }
 const mapStateToProps = (state) => ({
   personalData: state.data.personalDetails,
 });
-export default connect(
-  mapStateToProps,
-  {setPersonalData}
-)(withStyles(styles)(Form))
+export default connect(mapStateToProps, { setPersonalData })(Form);

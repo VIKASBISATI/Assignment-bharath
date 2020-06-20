@@ -1,5 +1,5 @@
-import React from "react";
-import { withStyles } from "@material-ui/core/styles";
+import React, { useState, useEffect } from "react";
+import { makeStyles } from "@material-ui/core/styles";
 import Input from "@material-ui/core/Input";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
@@ -8,7 +8,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Select from "@material-ui/core/Select";
 import Checkbox from "@material-ui/core/Checkbox";
 
-const styles = (theme) => ({
+const useStyles = makeStyles((theme) => ({
   formControl: {
     margin: theme.spacing(1),
     minWidth: 200,
@@ -24,7 +24,7 @@ const styles = (theme) => ({
   noLabel: {
     marginTop: theme.spacing(3),
   },
-});
+}));
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -39,67 +39,56 @@ const MenuProps = {
 
 const areaOfInterest = ["IT", "Business", "Banking", "Railways"];
 
-class MultipleSelect extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      interests: props.interestsProp ? props.interestsProp : [],
-      isEdit: props.isEditView ? props.isEditView : false,
-    };
-  }
-  handleChange = ({ target: { value } }) => {
-    this.setState({
-      interests: value,
-    });
+function MultipleSelect(props) {
+  const classes = useStyles();
+  const [interests, setInterests] = useState(
+    props.interestsProp ? props.interestsProp : []
+  );
+  const [isEdit, setIsEdit] = useState(
+    props.isEditView ? props.isEditView : false
+  );
+  const handleChange = ({ target: { value } }) => {
+    setInterests(value);
     // if (!this.state.isEdit) {
-      this.props.setInterestsInForm(value);
+    props.setInterestsInForm(value);
     // }
   };
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.clearSelectedItems) {
-      this.setState({
-        interests: [],
-      });
+  useEffect(() => {
+    if (props.clearSelectedItems) {
+      setInterests([]);
     }
-    if (nextProps.isEditView) {
-      this.setState({
-        interestsProp: nextProps.interestsProp,
-      });
+    if (props.isEditView) {
+      setInterests(props.interestsProp);
     }
-  }
-  render() {
-    const { interests } = this.state;
-    const { classes } = this.props;
-    return (
-      <div>
-        <FormControl className={classes.formControl}>
-          <InputLabel id="demo-mutiple-checkbox-label">
-            Area of interest
-          </InputLabel>
-          <Select
-            labelId="demo-mutiple-checkbox-label"
-            id="demo-mutiple-checkbox"
-            multiple
-            value={interests}
-            onChange={this.handleChange}
-            input={<Input />}
-            renderValue={(selected) => selected.join(", ")}
-            MenuProps={MenuProps}
-          >
-            {areaOfInterest.map((interest) => {
-              return (
-                <MenuItem key={interest} value={interest}>
-                  <Checkbox
-                    checked={interests.indexOf(interest) > -1}
-                  />
-                  <ListItemText primary={interest} />
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </FormControl>
-      </div>
-    );
-  }
+  }, [props.clearSelectedItems, props.isEditView, props.interestsProp]);
+
+  return (
+    <div>
+      <FormControl className={classes.formControl}>
+        <InputLabel id="demo-mutiple-checkbox-label">
+          Area of interest
+        </InputLabel>
+        <Select
+          labelId="demo-mutiple-checkbox-label"
+          id="demo-mutiple-checkbox"
+          multiple
+          value={interests}
+          onChange={handleChange}
+          input={<Input />}
+          renderValue={(selected) => selected.join(", ")}
+          MenuProps={MenuProps}
+        >
+          {areaOfInterest.map((interest) => {
+            return (
+              <MenuItem key={interest} value={interest}>
+                <Checkbox checked={interests.indexOf(interest) > -1} />
+                <ListItemText primary={interest} />
+              </MenuItem>
+            );
+          })}
+        </Select>
+      </FormControl>
+    </div>
+  );
 }
-export default withStyles(styles)(MultipleSelect);
+export default MultipleSelect;
