@@ -38,7 +38,7 @@ class Form extends Component {
       clearItems: true,
       gender: "",
       interests: [],
-      personalDetails: [],
+      // personalDetails: [],
     });
   };
   componentDidUpdate() {
